@@ -19,7 +19,8 @@ Start-Transcript -Path "$env:ProgramData\Autopilot\Install.log"
 
 # Install local experience packs
 Get-ChildItem -Path "$PSScriptRoot\Assets\Language" -Recurse -Filter *.appx | ForEach-Object {
-	if (-not(Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -eq "Microsoft.LanguageExperiencePack$($_.Directory.Name)" })) {
+	$Language = $_.DirectoryName.Substring($_.DirectoryName.Length - 5, 5)
+	if (-not(Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -eq "Microsoft.LanguageExperiencePack$($Language)" })) {
 		Add-AppxProvisionedPackage -Online -PackagePath $_.FullName -LicensePath "$($_.DirectoryName)\License.xml"
 	}
 }
@@ -32,16 +33,16 @@ Get-WindowsCapability -Online | Where-Object { $_.Name -match "en-AU" -and $_.St
 
 # Remove built-in apps
 Get-Content -Path "$PSScriptRoot\Assets\Apps.remove" | ForEach-Object {
-	$installed = $_
-	Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -eq $installed } | ForEach-Object {
+	$Installed = $_
+	Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -eq $Installed } | ForEach-Object {
 		$_ | Remove-AppxProvisionedPackage -Online
 	}
 }
 
 # Install OneDrive
 (New-Object Net.WebClient).DownloadFile("https://go.microsoft.com/fwlink/?linkid=844652","$env:ProgramData\OneDriveSetup.exe")
-$install = Start-Process -FilePath "$env:ProgramData\OneDriveSetup.exe" -ArgumentList "/allusers" -PassThru -WindowStyle Hidden
-$install.WaitForExit()
+$Install = Start-Process -FilePath "$env:ProgramData\OneDriveSetup.exe" -ArgumentList "/allusers" -PassThru -WindowStyle Hidden
+$Install.WaitForExit()
 Remove-Item -Path "$env:ProgramData\OneDriveSetup.exe" -Force
 
 # Set registered owner and organisation
